@@ -92,7 +92,9 @@ def artifact(root: Path, pin: dict) -> Path:
     path = cache / filename
     if not path.exists():
         print(f"Fetching locked release artifact: {filename}", flush=True)
-        with urllib.request.urlopen(pin["url"], timeout=45) as response:
+        # Some public license hosts reject urllib's default user agent.
+        request = urllib.request.Request(pin["url"], headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(request, timeout=45) as response:
             data = response.read()
         if hashlib.sha256(data).hexdigest() != pin["sha256"]:
             raise RuntimeError(f"Upstream artifact checksum mismatch: {filename}")

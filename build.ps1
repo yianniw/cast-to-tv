@@ -1,6 +1,10 @@
 $ErrorActionPreference = "Stop"
 Push-Location $PSScriptRoot
 try {
+    $nativeHelperPath = Join-Path $PSScriptRoot '.tmp\native-build\cmake\Release\cast_streaming_probe.exe'
+    if (!(Test-Path -LiteralPath $nativeHelperPath -PathType Leaf)) {
+        throw "Native helper missing. Run powershell -ExecutionPolicy Bypass -File .\native\build.ps1 -Fetch first, then retry this build."
+    }
     python -c "import tkinter; tkinter.Tcl()"
     if ($LASTEXITCODE -ne 0) {
         throw "Tcl/Tk could not initialize. Build from a Windows session where Python's Tcl/Tk files are accessible."
