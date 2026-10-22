@@ -1,0 +1,5 @@
+mss>=10.2.0
+PyChromecast>=14.0.0
+soundcard>=0.4.4
+pystray>=0.19.5
+Pillow>=10.0

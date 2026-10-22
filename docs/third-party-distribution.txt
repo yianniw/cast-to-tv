@@ -1,0 +1,83 @@
+Cast to TV - third-party software
+================================
+
+Distribute CastToTV.exe together with the entire third-party folder. Keep this
+folder beside the executable; do not distribute the executable by itself.
+All notices, source archives and instructions below are available offline.
+
+These notices apply to third-party components and do not grant a license to
+the original Cast to TV application code. Each component remains under its
+own license. The manifest records exact component versions, source locations,
+archive hashes, runtime Python ABI and the build information.
+
+Sources and your rights
+----------------------
+pystray is distributed under LGPLv3; both the LGPLv3 and incorporated GPLv3
+texts are provided in licenses/pystray. zeroconf is distributed under LGPL
+2.1 or later; this distribution uses LGPL 2.1, supplied in licenses/zeroconf.
+Their corresponding source, including upstream build files, is in sources/.
+certifi and MPL-covered portions of setuptools are supplied with their
+corresponding source in sources/ under MPL 2.0. See their notices and manifest
+for the exact archives. No local changes to these upstream sources are made.
+
+You may modify the LGPL libraries, run Cast to TV with interface-compatible
+modified versions, and reverse engineer as needed to debug such modifications.
+Any application terms restricting modification or reverse engineering must
+contain exceptions preserving these rights and the rights granted by other
+third-party licenses. The covered source remains under its applicable license.
+Third-party authors do not endorse this application. Any application support
+or warranties are offered by the application distributor, not these authors.
+
+Replacing LGPL libraries
+------------------------
+Close Cast to TV completely, including its tray icon, before replacing files.
+Back up third-party/runtime. Extract the relevant source archive into a working
+directory outside this distribution and make your changes there. Install Python
+matching the manifest's version, ABI and Windows architecture (64-bit CPython
+3.13 for this release). No application source or application rebuild is needed.
+
+pystray: its source package lives under lib/pystray in the GitHub archive.
+Replace third-party/runtime/pystray with that complete package, preserving
+its interface. Its Pillow and six dependencies are supplied by the executable.
+
+zeroconf: use its supplied pyproject.toml and build files. With a matching
+Python, run `python -m pip wheel --no-deps --wheel-dir wheels SOURCE_DIRECTORY`.
+This may download upstream build tools and may require the Visual Studio C++
+Build Tools for compiled extensions. Extract the resulting wheel as a ZIP and
+replace the whole third-party/runtime/zeroconf package and its dist-info folder.
+Its ifaddr dependency is supplied by the executable. To edit the Python files
+directly, remove the corresponding .pyd files so they do not override .py files;
+zeroconf includes Python implementations. Preserve all package files and keep
+your replacement compatible with the calling interfaces and runtime ABI.
+
+Run `CastToTV.exe --check-runtime report.json` to produce an import report
+without opening a GUI or connecting to a receiver. Reported paths should be
+under third-party/runtime. Replacement libraries are not subject to application
+version or checksum restrictions. The release validation tool checks original
+release materials for distributors only; it is not a runtime restriction.
+If a replacement fails, restore the backup or the complete original folder.
+This permission does not require the distributor to support modified versions.
+
+Other bundled components
+------------------------
+Complete package notices, including notices for bundled dependencies, are in
+licenses/. The native helper's component revisions and notices are included.
+Python's license documentation covers its bundled third-party components;
+separate Tcl/Tk and Microsoft runtime terms are also included. Files from the
+Windows operating system are not redistributed as application dependencies.
+Microsoft's runtime end-user terms apply to Microsoft's runtime components;
+the Visual Studio terms and redistribution list describe the distributor's
+runtime redistribution rights. They do not replace the LGPL library terms or
+apply to the original application code.
+
+This software is based in part on the work of the FreeType Team.
+This software is based in part on the work of the Independent JPEG Group.
+Pillow's FreeType component is used under the FreeType License (FTL), rather
+than its alternative GPL license. NumPy's bundled OpenBLAS/LAPACK notices
+include the GCC runtime library exception; retain that exception with the GPL
+text. Merely including alternative license texts does not select those terms
+for unrelated components or the application.
+
+FFmpeg is not included. It remains a separate system requirement. Bundling an
+FFmpeg build later requires reviewing that build's licenses and source duties.
+This package does not establish codec patent clearance or trademark rights.

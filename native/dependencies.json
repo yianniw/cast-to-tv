@@ -1,0 +1,9 @@
+{
+  "openscreen": {"url": "https://chromium.googlesource.com/openscreen", "revision": "87b14ec7d68d271a82e6bd76437b53e21ee1fc11", "path": "."},
+  "abseil": {"url": "https://chromium.googlesource.com/external/github.com/abseil/abseil-cpp.git", "revision": "1fc748ff47859c3a041b9c2d7cfa5dfb22ae4ec6", "path": "third_party/abseil/src"},
+  "boringssl": {"url": "https://boringssl.googlesource.com/boringssl.git", "revision": "26e8a8acb91a0cfbd2f95bf7245e2eb87d533a2f", "path": "third_party/boringssl/src"},
+  "jsoncpp": {"url": "https://chromium.googlesource.com/external/github.com/open-source-parsers/jsoncpp.git", "revision": "9af09c4a4abe5928d1f7a6e7ec1c73a565bb362e", "path": "third_party/jsoncpp/src"},
+  "modp_b64": {"url": "https://chromium.googlesource.com/chromium/src/third_party/modp_b64", "revision": "50685101d51ef9aabbd60c94f52d9e026d39c509", "path": "third_party/modp_b64"},
+  "build_headers": {"url": "https://chromium.googlesource.com/chromium/src/build", "revision": "9eae7c82c57b9e64a85bcf3a246821dffd9d4d5e", "files": ["build_config.h", "buildflag.h"]},
+  "opus": {"url": "https://github.com/xiph/opus.git", "revision": "22244de5a79bd1d6d623c32e72bf1954b56235be", "path": "third_party/opus/src"}
+}
