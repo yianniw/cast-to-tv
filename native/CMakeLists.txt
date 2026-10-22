@@ -6,6 +6,13 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+if(MSVC)
+  # Keep local checkout paths out of __FILE__ diagnostics in shipped binaries,
+  # including strings compiled into the statically linked dependencies.
+  get_filename_component(CAST_SOURCE_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/.." ABSOLUTE)
+  file(TO_NATIVE_PATH "${CAST_SOURCE_ROOT}" CAST_SOURCE_PATH)
+  add_compile_options(/experimental:deterministic "/pathmap:${CAST_SOURCE_PATH}=CastToTV")
+endif()
 set(OPENSCREEN_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.tmp/native-build/openscreen" CACHE PATH "Pinned Open Screen checkout")
 get_filename_component(OS "${OPENSCREEN_ROOT}" ABSOLUTE)
 add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN _CRT_SECURE_NO_WARNINGS)

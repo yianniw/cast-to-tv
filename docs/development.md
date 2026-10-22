@@ -57,6 +57,13 @@ The app version is defined in [`cast_to_tv/__init__.py`](../cast_to_tv/__init__.
 
 New dependency versions, rebuilt native helpers, changed notices, or Python runtime upgrades require reviewing and updating the lock before release. Missing notices, required source, or unaccounted components fail the build.
 
+The helper checksum pins one reviewed binary, not just its source revision.
+A fresh native compilation can therefore fail packaging with **Native helper
+differs from the reviewed release lock**, even when the source revisions match.
+The maintainer must validate the rebuilt helper and update
+`native_helper_sha256` in `tools/release-lock.json` before packaging it. The
+current scripts do not provide an unattended fresh-clone package build.
+
 Network access is needed on the first build to fetch locked artifacts. Later builds use the verified `.tmp/packaging/downloads` cache. To populate it explicitly, run:
 
 ```powershell
@@ -75,6 +82,31 @@ python -m tools.release_check
 The first command checks the executable/companion pairing and release materials. The second inspects the actual executable archives, verifies external imports and modified library replacements, tests missing/unloadable packages, and launches through a path containing spaces. It temporarily changes generated library files and restores them. These checks do not contact a TV or change saved preferences.
 
 The executable also supports `CastToTV.exe --check-runtime REPORT_PATH` for a standalone import report.
+
+### Prepare a GitHub release
+
+After building and validating the package, create the release download:
+
+```powershell
+python -m tools.release archive
+```
+
+This creates `dist/CastToTV-VERSION-windows-x64.zip` and its `.zip.sha256`
+checksum file. The ZIP contains the paired executable, validated `third-party`
+files, and the project's `LICENSE` file when present. Saved settings, logs,
+temporary files and developer reports beside the executable are excluded.
+
+Create a GitHub release tagged `vVERSION` from the accepted source commit and
+attach both generated files. Use the version in `cast_to_tv/__init__.py`.
+Publish the complete ZIP rather than the standalone executable. Release notes
+should describe the Windows and FFmpeg requirements, both casting modes, and
+the experimental status of Low delay. Retain all bundled third-party materials.
+
+The original application code is licensed under MIT; keep the root `LICENSE`
+file in the release ZIP. Review the Git author identity that will be public.
+The native build maps source paths to `CastToTV` so compiler diagnostics do not
+expose the builder's Windows home directory; package checks verify this.
+Third-party notices apply separately to their respective components.
 
 ## Automated and GUI checks
 

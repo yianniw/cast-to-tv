@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import hashlib
 import os
+import re
 import subprocess
 from pathlib import Path
 
@@ -29,7 +30,10 @@ def check(root: Path) -> dict:
     notices = next(name for name in archive.toc if name.replace("\\", "/") == "third-party/NOTICES.txt")
     assert archive.extract(notices) == (release / "NOTICES.txt").read_bytes(), "Embedded notices mismatch"
     helper = next(name for name in archive.toc if name.replace("\\", "/") == "native/cast_streaming_probe.exe")
-    assert hashlib.sha256(archive.extract(helper)).hexdigest() == manifest["native_helper_sha256"], "Native helper mismatch"
+    helper_bytes = archive.extract(helper)
+    assert hashlib.sha256(helper_bytes).hexdigest() == manifest["native_helper_sha256"], "Native helper mismatch"
+    assert not re.search(rb"[A-Za-z]:[\\/]Users[\\/]", helper_bytes, re.IGNORECASE), \
+        "Native helper exposes a Windows home path"
 
     def probe(path=executable, *, success=True):
         report = work / "runtime-check.json"
@@ -44,6 +48,7 @@ def check(root: Path) -> dict:
 
     original = probe()
     checks = ["No LGPL modules or extensions embedded", "Embedded notices and native helper match the manifest",
+              "Native helper contains no Windows home paths",
               "Application and external library imports from unrelated working directory"]
     for name in EXTERNAL:
         directory = release / "runtime" / name

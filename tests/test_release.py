@@ -61,6 +61,63 @@ class RuntimeLibraryTests(unittest.TestCase):
 
 
 class ReleaseMaterialTests(unittest.TestCase):
+    def archive_fixture(self, root):
+        distribution = root / "dist"
+        companion = distribution / "third-party"
+        for name in runtime.LIBRARIES:
+            path = companion / "runtime" / name / "__init__.py"
+            path.parent.mkdir(parents=True)
+            path.write_text("# release library\n")
+        (distribution / "CastToTV.exe").write_bytes(b"release executable")
+        manifest = {
+            "application_version": release.__version__,
+            "executable_sha256": release.digest(distribution / "CastToTV.exe"),
+            "support_files": {path.relative_to(companion).as_posix(): release.digest(path)
+                              for path in companion.rglob("*") if path.is_file()},
+            "components": [],
+        }
+        release.write_json(companion / "manifest.json", manifest)
+        return distribution, manifest
+
+    def test_release_archive_excludes_local_data_and_contains_verified_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            distribution, manifest = self.archive_fixture(root)
+            for relative in ("settings.json", "logs/CastToTV.log", "diagnostics/report.json"):
+                path = distribution / relative
+                path.parent.mkdir(exist_ok=True)
+                path.write_text("private local data")
+            (root / "LICENSE").write_text("Project license")
+            archive = release.archive_release(root)
+            expected = {"CastToTV.exe", "third-party/manifest.json", "LICENSE"}
+            expected.update(f"third-party/{relative}" for relative in manifest["support_files"])
+            with zipfile.ZipFile(archive) as packaged:
+                self.assertEqual(set(packaged.namelist()), expected)
+                self.assertIsNone(packaged.testzip())
+                for relative in manifest["support_files"]:
+                    self.assertEqual(packaged.read(f"third-party/{relative}"),
+                                     (distribution / "third-party" / relative).read_bytes())
+            self.assertEqual(archive.with_suffix(".zip.sha256").read_text(),
+                             f"{release.digest(archive)}  {archive.name}\n")
+
+    def test_release_archive_rejects_changed_executable(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            distribution, _ = self.archive_fixture(root)
+            (distribution / "CastToTV.exe").write_bytes(b"unreviewed executable")
+            with self.assertRaisesRegex(RuntimeError, "Executable does not match"):
+                release.archive_release(root)
+            self.assertEqual(list(distribution.glob("*.zip*")), [])
+
+    def test_release_archive_requires_current_packaged_version(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            distribution, manifest = self.archive_fixture(root)
+            manifest["application_version"] = "different-version"
+            release.write_json(distribution / "third-party/manifest.json", manifest)
+            with self.assertRaisesRegex(RuntimeError, "Rebuild with build.ps1"):
+                release.archive_release(root)
+
     def test_external_filter_covers_python_extensions_and_metadata(self):
         for name in ["pystray", "pystray._win32", "zeroconf/_dns.cp313-win_amd64.pyd",
                      "zeroconf\\_services\\browser.pyd", "pystray-0.19.5.dist-info/COPYING"]:

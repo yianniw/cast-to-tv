@@ -20,6 +20,8 @@ import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 from pathlib import Path
 
+from cast_to_tv import __version__
+
 EXTERNAL = ("pystray", "zeroconf")
 LOCK = "release-lock.json"
 
@@ -374,17 +376,48 @@ def publish(root: Path) -> None:
     shutil.copytree(staged, output, dirs_exist_ok=True)
     manifest = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
     manifest["executable_sha256"] = digest(root / "dist/CastToTV.exe")
+    manifest["application_version"] = __version__
     write_json(output / "manifest.json", manifest)
     validate_release(output)
 
 
+def archive_release(root: Path) -> Path:
+    """Package only validated distribution files, excluding local application data."""
+    distribution = root / "dist"
+    release = distribution / "third-party"
+    manifest = validate_release(release)
+    if not manifest.get("executable_sha256") or manifest.get("application_version") != __version__:
+        raise RuntimeError("Rebuild with build.ps1 before creating a release archive")
+    archive = distribution / f"CastToTV-{__version__}-windows-x64.zip"
+    temporary = archive.with_suffix(".zip.tmp")
+    files = ["CastToTV.exe", "third-party/manifest.json"]
+    files.extend(f"third-party/{relative}" for relative in sorted(manifest["support_files"]))
+    try:
+        with zipfile.ZipFile(temporary, "w", compression=zipfile.ZIP_DEFLATED) as output:
+            for relative in files:
+                output.write(distribution / relative, relative)
+            license_path = root / "LICENSE"
+            if license_path.is_file():
+                output.write(license_path, "LICENSE")
+        temporary.replace(archive)
+    finally:
+        temporary.unlink(missing_ok=True)
+    checksum = archive.with_suffix(".zip.sha256")
+    checksum.write_text(f"{digest(archive)}  {archive.name}\n", encoding="utf-8")
+    print(f"Release archive: {archive}")
+    print(f"SHA-256: {checksum}")
+    return archive
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=("publish", "validate", "fetch"))
+    parser.add_argument("action", choices=("publish", "validate", "fetch", "archive"))
     args = parser.parse_args()
     project = Path(__file__).resolve().parents[1]
     if args.action == "publish":
         publish(project)
+    elif args.action == "archive":
+        archive_release(project)
     elif args.action == "fetch":
         for pin in load_lock(project)["artifacts"].values():
             artifact(project, pin)

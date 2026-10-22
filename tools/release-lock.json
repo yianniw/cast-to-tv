@@ -504,7 +504,7 @@
       "path": "third_party/opus/src"
     }
   },
-  "native_helper_sha256": "f29514db0295832f25521fc7b2c61a4b6a13c1e3fb0f9083495ffee50d2e606a",
+  "native_helper_sha256": "601af2465cf1f9014202c6548a576114d0bf3ced800de8bc64f5a6bda01782da",
   "archive_notices": [
     {
       "artifact": "cffi-source",
